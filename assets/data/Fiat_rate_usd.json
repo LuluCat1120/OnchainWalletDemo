@@ -1,0 +1,46 @@
+{
+    "rates": [
+        {
+            "fiat_rate":"60000",
+            "fiat_symbol":"USD",
+            "id":1,
+            "symbol":"BTC"
+        },
+        {
+            "fiat_rate":"3350",
+            "fiat_symbol":"USD",
+            "symbol":"ETH",
+            "id":2
+        },
+        {
+            "fiat_rate":"0.09",
+            "fiat_symbol":"USD",
+            "symbol":"CRO",
+            "id":3
+        },
+        {
+            "fiat_rate":"133",
+            "fiat_symbol":"USD",
+            "symbol":"SOL",
+            "id":4
+        },
+        {
+            "fiat_rate":"0.56",
+            "fiat_symbol":"USD",
+            "symbol":"MATIC",
+            "id":5
+        },
+        {
+            "fiat_rate":"6.94",
+            "fiat_symbol":"USD",
+            "symbol":"ATOM",
+            "id":6
+        },
+        {
+            "fiat_rate":"0.12",
+            "fiat_symbol":"USD",
+            "symbol":"DOGE",
+            "id":7
+        }
+    ]
+} 

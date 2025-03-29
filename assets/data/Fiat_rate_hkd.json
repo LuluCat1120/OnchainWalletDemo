@@ -1,0 +1,46 @@
+{
+    "rates": [
+        {
+            "fiat_rate":"47430",
+            "fiat_symbol":"HKD",
+            "id":1,
+            "symbol":"BTC"
+        },
+        {
+            "fiat_rate":"26100",
+            "fiat_symbol":"HKD",
+            "symbol":"ETH",
+            "id":2
+        },
+        {
+            "fiat_rate":"0.7",
+            "fiat_symbol":"HKD",
+            "symbol":"CRO",
+            "id":3
+        },
+        {
+            "fiat_rate":"1043",
+            "fiat_symbol":"HKD",
+            "symbol":"SOL",
+            "id":4
+        },
+        {
+            "fiat_rate":"4.44",
+            "fiat_symbol":"HKD",
+            "symbol":"MATIC",
+            "id":5
+        },
+        {
+            "fiat_rate":"54.14",
+            "fiat_symbol":"HKD",
+            "symbol":"ATOM",
+            "id":6
+        },
+        {
+            "fiat_rate":"0.95",
+            "fiat_symbol":"HKD",
+            "symbol":"DOGE",
+            "id":7
+        }
+    ]
+} 
