@@ -31,10 +31,25 @@ export default function RootLayout() {
   return (
     <CurrencyProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen 
+            name="(tabs)" 
+            options={{ 
+              headerShown: false,
+              title: '', 
+              headerTitle: ''
+            }} 
+          />
           <Stack.Screen name="+not-found" />
           <Stack.Screen name="settings" options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="index" 
+            options={{ 
+              headerShown: false,
+              title: '', 
+              headerTitle: ''
+            }} 
+          />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

@@ -19,6 +19,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
+        headerTitle: '',
         tabBarStyle: Platform.select({
           ios: {
             position: 'absolute',
@@ -30,7 +31,15 @@ export default function TabLayout() {
         name="assets"
         options={{
           title: 'Assets',
+          headerShown: false,
+          headerTitle: '',
           tabBarIcon: ({ color }) => <MaterialIcons name="account-balance-wallet" size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{
+          href: null, // 禁用这个标签页的路由
         }}
       />
     </Tabs>

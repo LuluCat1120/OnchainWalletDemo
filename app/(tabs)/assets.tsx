@@ -222,7 +222,7 @@ export default function AssetsScreen() {
         <Pressable style={styles.iconButton}>
           <MaterialIcons name="history" size={24} color="#999999" />
         </Pressable>
-        <Pressable style={styles.iconButton}>
+        <Pressable style={styles.iconButton} onPress={toggleCurrency}>
           <MaterialIcons name="settings" size={24} color="#999999" />
         </Pressable>
       </View>
@@ -266,12 +266,10 @@ export default function AssetsScreen() {
       <View style={styles.assetsContainer}>
         <View style={styles.assetsHeader}>
           <Text style={styles.assetsTitle}>Your Assets</Text>
-          <Pressable onPress={toggleCurrency}>
-            <View style={styles.manageButton}>
-              <Text style={styles.manageText}>Manage</Text>
-              <MaterialIcons name="tune" size={18} color="#007AFF" />
-            </View>
-          </Pressable>
+          <View style={styles.manageButton}>
+            <Text style={styles.manageText}>Manage</Text>
+            <MaterialIcons name="tune" size={18} color="#007AFF" />
+          </View>
         </View>
         
         {activeTab === 'Crypto' && (
