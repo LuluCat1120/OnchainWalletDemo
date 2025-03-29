@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, FlatList, Pressable, View, Text, SafeAreaView, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 导入JSON数据
+// Import JSON data
 import currencyData from '../../assets/data/Currency.json';
 import usdRateData from '../../assets/data/Fiat_rate_usd.json';
 import hkdRateData from '../../assets/data/Fiat_rate_hkd.json';
 
-// 加密货币图标颜色映射
+// Storage key for currency setting - must match the key used in settings.tsx
+const CURRENCY_STORAGE_KEY = 'app_currency_setting';
+
+// Cryptocurrency icon color mapping
 const colorMap: Record<string, string> = {
   BTC: '#F7931A',
   ETH: '#627EEA',
@@ -18,32 +23,32 @@ const colorMap: Record<string, string> = {
   DOGE: '#C2A633'
 };
 
-// 随机生成24小时变化率
+// Generate random 24-hour change
 const getRandomChange = () => {
-  // 生成-10%到10%之间的随机数
+  // Generate random number between -10% and 10%
   return (Math.random() * 20 - 10).toFixed(2);
 };
 
-// 为每个币种预先生成变化率
+// Pre-generate change percentages for each coin
 const priceChanges: Record<number, string> = {};
 
-// 初始化所有币种的变化率
+// Initialize change percentages for all coins
 currencyData.currencies?.forEach(currency => {
   priceChanges[currency.id] = getRandomChange();
 });
 
-// 从JSON文件加载加密货币数据
+// Load cryptocurrency data from JSON files
 const loadCryptoData = () => {
   const currencies = currencyData.currencies || [];
   const usdRates = usdRateData.rates || [];
   const hkdRates = hkdRateData.rates || [];
   
-  // 处理USD数据
+  // Process USD data
   const usdData = currencies.map(currency => {
-    // 查找对应的汇率信息
+    // Find corresponding rate info
     const rateInfo = usdRates.find(rate => rate.id === currency.id);
     
-    // 如果找到汇率信息，计算总价值
+    // If rate info found, calculate total value
     const fiatRate = rateInfo ? rateInfo.fiat_rate : '0';
     const fiatValue = (parseFloat(fiatRate) * currency.amount).toString();
     
@@ -56,12 +61,12 @@ const loadCryptoData = () => {
     };
   });
   
-  // 处理HKD数据
+  // Process HKD data
   const hkdData = currencies.map(currency => {
-    // 查找对应的汇率信息
+    // Find corresponding rate info
     const rateInfo = hkdRates.find(rate => rate.id === currency.id);
     
-    // 如果找到汇率信息，计算总价值
+    // If rate info found, calculate total value
     const fiatRate = rateInfo ? rateInfo.fiat_rate : '0';
     const fiatValue = (parseFloat(fiatRate) * currency.amount).toString();
     
@@ -78,15 +83,40 @@ const loadCryptoData = () => {
 };
 
 export default function AssetsScreen() {
-  // 状态
+  // States
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Crypto');
   const [currencyType, setCurrencyType] = useState('USD');
   const [cryptoData, setCryptoData] = useState<any[]>([]);
 
-  // 加载数据
+  // Check for settings changes when component is focused
   useEffect(() => {
-    // 模拟网络请求延迟
+    const checkSettings = async () => {
+      try {
+        const savedCurrency = await AsyncStorage.getItem(CURRENCY_STORAGE_KEY);
+        if (savedCurrency && savedCurrency !== currencyType) {
+          console.log("Loading saved currency from storage:", savedCurrency);
+          setCurrencyType(savedCurrency);
+        }
+      } catch (error) {
+        console.error("Failed to load currency setting:", error);
+      }
+    };
+    
+    // Check currency settings when component mounts
+    checkSettings();
+    
+    // Set interval to periodically check for currency changes
+    const intervalId = setInterval(checkSettings, 2000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [currencyType]);
+
+  // Load data
+  useEffect(() => {
+    // Simulate network request delay
     const timer = setTimeout(() => {
       const { usdData, hkdData } = loadCryptoData();
       setCryptoData(currencyType === 'USD' ? usdData : hkdData);
@@ -96,7 +126,7 @@ export default function AssetsScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 切换货币类型时更新数据
+  // Update data when currency type changes
   useEffect(() => {
     if (!isLoading) {
       const { usdData, hkdData } = loadCryptoData();
@@ -104,7 +134,7 @@ export default function AssetsScreen() {
     }
   }, [currencyType, isLoading]);
 
-  // 标签组件
+  // Tab component
   const TabBar = () => {
     return (
       <View style={styles.tabBarContainer}>
@@ -131,7 +161,7 @@ export default function AssetsScreen() {
     );
   };
 
-  // 操作按钮组件
+  // Action buttons component
   const ActionButtons = () => (
     <View style={styles.actionButtonsContainer}>
       <View style={styles.actionButton}>
@@ -161,17 +191,20 @@ export default function AssetsScreen() {
     </View>
   );
 
-  // 切换货币类型
+  // Toggle currency type
   const toggleCurrency = () => {
     setCurrencyType(prev => prev === 'USD' ? 'HKD' : 'USD');
   };
 
-  // 渲染资产项目
+  // Render asset item
   const renderAssetItem = ({ item }: { item: any }) => {
     const change = item.priceChange;
     const isNegative = parseFloat(change) < 0;
     
-    // 格式化价值显示
+    // Show correct currency symbol based on currency type
+    const currencySymbol = currencyType === 'USD' ? '$' : 'HK$';
+    
+    // Format value display
     const formatValue = (value: string) => {
       const numValue = parseFloat(value);
       if (numValue >= 1000000) {
@@ -197,7 +230,7 @@ export default function AssetsScreen() {
             </View>
           </View>
           <View style={styles.assetRight}>
-            <Text style={styles.assetValue}>$ {formatValue(item.fiatValue)}</Text>
+            <Text style={styles.assetValue}>{currencySymbol} {formatValue(item.fiatValue)}</Text>
             <Text style={styles.assetAmount}>{item.amount} {item.symbol}</Text>
           </View>
         </View>
@@ -205,7 +238,7 @@ export default function AssetsScreen() {
     );
   };
 
-  // 顶部钱包信息
+  // Wallet header component
   const WalletHeader = () => (
     <View style={styles.walletHeader}>
       <View style={styles.walletLeft}>
@@ -222,14 +255,14 @@ export default function AssetsScreen() {
         <Pressable style={styles.iconButton}>
           <MaterialIcons name="history" size={24} color="#999999" />
         </Pressable>
-        <Pressable style={styles.iconButton} onPress={toggleCurrency}>
+        <Pressable style={styles.iconButton} onPress={() => router.navigate('/settings')}>
           <MaterialIcons name="settings" size={24} color="#999999" />
         </Pressable>
       </View>
     </View>
   );
 
-  // 网络选择器
+  // Network selector component
   const NetworkSelector = () => (
     <View style={styles.networkSelector}>
       <Text style={styles.networkText}>All Mainnets</Text>
@@ -237,7 +270,7 @@ export default function AssetsScreen() {
     </View>
   );
 
-  // 余额显示
+  // Balance display component
   const BalanceDisplay = () => (
     <View style={styles.balanceDisplay}>
       <MaterialIcons name="visibility" size={24} color="#999999" />
@@ -245,7 +278,7 @@ export default function AssetsScreen() {
     </View>
   );
 
-  // 加载中状态
+  // Loading state
   if (isLoading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>

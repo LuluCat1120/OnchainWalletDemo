@@ -41,7 +41,22 @@ export default function RootLayout() {
             }} 
           />
           <Stack.Screen name="+not-found" />
-          <Stack.Screen name="settings" options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="settings" 
+            options={{ 
+              headerShown: true,
+              title: "Settings",
+              headerTitleAlign: "center",
+              headerBackVisible: true,
+              headerTintColor: "#007AFF",
+              headerStyle: {
+                backgroundColor: "#f8f8f8"
+              },
+              headerTitleStyle: {
+                fontWeight: "600"
+              }
+            }} 
+          />
           <Stack.Screen 
             name="index" 
             options={{ 

@@ -1,97 +1,119 @@
-import React from 'react';
-import { StyleSheet, Pressable } from 'react-native';
-import { View, Text } from '../components/Themed';
-import { IconSymbol } from '../components/ui/IconSymbol';
-import { router } from 'expo-router';
-import { useCurrency } from '../hooks/useCurrencyContext';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, Switch, ScrollView } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Storage key for currency setting
+const CURRENCY_STORAGE_KEY = 'app_currency_setting';
 
 export default function SettingsScreen() {
-  const { fiatCurrency, toggleCurrency } = useCurrency();
+  const [currency, setCurrency] = useState<string>("USD");
+  
+  useEffect(() => {
+    // Load saved currency setting
+    const loadSavedCurrency = async () => {
+      try {
+        const savedCurrency = await AsyncStorage.getItem(CURRENCY_STORAGE_KEY);
+        if (savedCurrency) {
+          setCurrency(savedCurrency);
+        }
+      } catch (error) {
+        console.error("Failed to load currency setting:", error);
+      }
+    };
+
+    loadSavedCurrency();
+  }, []);
+
+  const handleToggleCurrency = async () => {
+    // Toggle between USD and HKD
+    const newCurrency = currency === 'USD' ? 'HKD' : 'USD';
+    
+    // Update local state
+    setCurrency(newCurrency);
+    
+    // Save to storage for other components to access
+    try {
+      await AsyncStorage.setItem(CURRENCY_STORAGE_KEY, newCurrency);
+      console.log("Currency saved:", newCurrency);
+    } catch (error) {
+      console.error("Failed to save currency setting:", error);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <IconSymbol name="chevron.left" size={24} color="#007AFF" />
-        </Pressable>
-        <Text style={styles.title}>设置</Text>
-        <View style={styles.placeholder} />
-      </View>
-
+    <ScrollView style={styles.container}>
+      {/* Currency settings */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>货币设置</Text>
-        <Pressable style={styles.option} onPress={toggleCurrency}>
-          <Text style={styles.optionText}>显示货币</Text>
-          <View style={styles.optionRight}>
-            <Text style={styles.optionValue}>{fiatCurrency}</Text>
-            <IconSymbol name="chevron.right" size={20} color="#8E8E93" />
+        <Text style={styles.sectionTitle}>Currency Settings</Text>
+        <View style={styles.settingItem}>
+          <Text style={styles.settingText}>Currency</Text>
+          <View style={styles.currencySelector}>
+            <Text style={styles.currencyText}>
+              {currency === 'USD' ? 'US Dollar (USD)' : 'Hong Kong Dollar (HKD)'}
+            </Text>
+            <Switch
+              value={currency === 'HKD'}
+              onValueChange={handleToggleCurrency}
+              trackColor={{ false: '#767577', true: '#81b0ff' }}
+              thumbColor={currency === 'HKD' ? '#007AFF' : '#f4f3f4'}
+            />
           </View>
-        </Pressable>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>关于</Text>
-        <View style={styles.option}>
-          <Text style={styles.optionText}>版本</Text>
-          <Text style={styles.optionValue}>1.0.0</Text>
         </View>
       </View>
-    </View>
+      
+      <StatusBar style="auto" />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 60,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    marginBottom: 24,
-    backgroundColor: 'transparent',
-  },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  placeholder: {
-    width: 40,
+    backgroundColor: '#f8f8f8',
   },
   section: {
-    marginBottom: 24,
+    marginTop: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: 14,
-    color: '#8E8E93',
+    color: '#666',
+    marginTop: -10,
     marginLeft: 16,
-    marginBottom: 8,
+    marginBottom: 5,
+    backgroundColor: '#f8f8f8',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 5,
   },
-  option: {
+  settingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F2F7',
+    borderBottomColor: '#f0f0f0',
   },
-  optionText: {
+  settingText: {
     fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
   },
-  optionRight: {
+  currencySelector: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  optionValue: {
-    fontSize: 16,
-    color: '#8E8E93',
+  currencyText: {
     marginRight: 8,
+    fontSize: 16,
+    color: '#666',
   },
 }); 
