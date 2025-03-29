@@ -2,6 +2,7 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SettingsScreen from '../app/settings';
+import { Switch } from 'react-native';
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -34,7 +35,7 @@ describe('SettingsScreen', () => {
   });
   
   it('renders correctly with default currency', async () => {
-    const { getByText } = render(<SettingsScreen />);
+    const { getByText, UNSAFE_getAllByType } = render(<SettingsScreen />);
     
     // Wait for AsyncStorage to resolve
     await waitFor(() => {
@@ -43,6 +44,10 @@ describe('SettingsScreen', () => {
     
     // Check for USD text
     expect(getByText('US Dollar (USD)')).toBeTruthy();
+    
+    // Find the Switch component directly since testID might not be set
+    const switches = UNSAFE_getAllByType(Switch);
+    expect(switches.length).toBeGreaterThan(0);
   });
   
   it('loads saved currency from AsyncStorage', async () => {
@@ -58,15 +63,18 @@ describe('SettingsScreen', () => {
   });
   
   it('toggles currency when switch is pressed', async () => {
-    const { getByTestId, getByText } = render(<SettingsScreen />);
+    const { getByText, UNSAFE_getAllByType } = render(<SettingsScreen />);
     
     // Initial state is USD
     await waitFor(() => {
       expect(getByText('US Dollar (USD)')).toBeTruthy();
     });
     
-    // Find and toggle switch
-    const currencySwitch = getByTestId('currency-switch');
+    // Find and toggle switch without using testID
+    const switches = UNSAFE_getAllByType(Switch);
+    expect(switches.length).toBeGreaterThan(0);
+    
+    const currencySwitch = switches[0];
     fireEvent(currencySwitch, 'onValueChange', true);
     
     await waitFor(() => {

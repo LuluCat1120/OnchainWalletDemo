@@ -1,10 +1,11 @@
 import React from 'react';
-import { render, fireEvent, act, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, act, waitFor, Switch } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SettingsScreen from '../app/settings';
 import AssetsScreen from '../app/(tabs)/assets';
+import { Switch as RNSwitch } from 'react-native';
 
-// Mock necessary modules
+// Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(() => Promise.resolve('USD')),
   setItem: jest.fn(() => Promise.resolve()),
@@ -36,26 +37,30 @@ describe('Integration Tests', () => {
   
   it('handles currency settings correctly', async () => {
     // 1. 渲染设置页面
-    const { getByTestId } = render(<SettingsScreen />);
+    const { getByText, UNSAFE_getAllByType } = render(<SettingsScreen />);
     
     // 确保页面已加载
     await waitFor(() => {
-      expect(getByTestId('currency-switch')).toBeTruthy();
+      expect(getByText('Currency Settings')).toBeTruthy();
     });
     
-    // 2. 切换币种
+    // 2. 找到切换开关（不使用testID）
+    const switches = UNSAFE_getAllByType(RNSwitch);
+    expect(switches.length).toBeGreaterThan(0);
+    
+    // 3. 切换币种
     await act(async () => {
-      fireEvent(getByTestId('currency-switch'), 'onValueChange', true);
+      fireEvent(switches[0], 'onValueChange', true);
     });
     
-    // 3. 验证AsyncStorage被调用以存储新的币种
+    // 4. 验证AsyncStorage被调用以存储新的币种
     expect(AsyncStorage.setItem).toHaveBeenCalledWith('currency', 'HKD');
     
-    // 4. 确认币种能够被其他页面正确读取
+    // 5. 确认币种能够被其他页面正确读取
     (AsyncStorage.getItem as jest.Mock).mockResolvedValue('HKD');
     const assetsScreen = render(<AssetsScreen />);
     
-    // 5. 验证持久化的币种设置
+    // 6. 验证持久化的币种设置
     expect(AsyncStorage.getItem).toHaveBeenCalledWith('currency');
   }, 10000);
 }); 
