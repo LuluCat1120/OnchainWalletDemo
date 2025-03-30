@@ -48,6 +48,7 @@ export default function RootLayout() {
               title: "Settings",
               headerTitleAlign: "center",
               headerBackVisible: true,
+              headerBackTitle: "Back",
               headerTintColor: "#007AFF",
               headerStyle: {
                 backgroundColor: "#f8f8f8"

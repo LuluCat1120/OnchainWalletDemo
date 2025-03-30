@@ -1,119 +1,178 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Switch, ScrollView } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Storage key for currency setting
-const CURRENCY_STORAGE_KEY = 'app_currency_setting';
+import { View, Text, Switch, StyleSheet, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
+import { Stack } from 'expo-router';
+import { useCurrency } from '../hooks/useCurrencyContext';
+import { useWalletSettingsModule } from '../hooks/useWalletSettingsModule';
 
 export default function SettingsScreen() {
-  const [currency, setCurrency] = useState<string>("USD");
+  // Use currency context
+  const { fiatCurrency, toggleCurrency } = useCurrency();
+  const [isUSD, setIsUSD] = useState(fiatCurrency === 'USD');
   
+  // Use wallet settings module
+  const walletModule = useWalletSettingsModule();
+  const isModuleAvailable = walletModule.isModuleAvailable;
+
+  // Update switch state when currency changes
   useEffect(() => {
-    // Load saved currency setting
-    const loadSavedCurrency = async () => {
-      try {
-        const savedCurrency = await AsyncStorage.getItem(CURRENCY_STORAGE_KEY);
-        if (savedCurrency) {
-          setCurrency(savedCurrency);
-        }
-      } catch (error) {
-        console.error("Failed to load currency setting:", error);
-      }
-    };
+    setIsUSD(fiatCurrency === 'USD');
+  }, [fiatCurrency]);
 
-    loadSavedCurrency();
-  }, []);
-
-  const handleToggleCurrency = async () => {
-    // Toggle between USD and HKD
-    const newCurrency = currency === 'USD' ? 'HKD' : 'USD';
-    
-    // Update local state
-    setCurrency(newCurrency);
-    
-    // Save to storage for other components to access
+  // Handle currency toggle
+  const handleCurrencyToggle = () => {
+    toggleCurrency();
+  };
+  
+  // Open native settings if available
+  useEffect(() => {
+    if (isModuleAvailable && Platform.OS === 'ios') {
+      openNativeSettings();
+    }
+  }, [isModuleAvailable]);
+  
+  const openNativeSettings = async () => {
     try {
-      await AsyncStorage.setItem(CURRENCY_STORAGE_KEY, newCurrency);
-      console.log("Currency saved:", newCurrency);
+      // Use type assertion to handle the property
+      // @ts-ignore - The type definition doesn't include openSettingsPage yet
+      if (walletModule.openSettingsPage) {
+        // @ts-ignore
+        await walletModule.openSettingsPage();
+      }
     } catch (error) {
-      console.error("Failed to save currency setting:", error);
+      console.error('Failed to open native settings:', error);
     }
   };
 
+  // Only render React Native settings if native module is not available
+  if (isModuleAvailable && Platform.OS === 'ios') {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <Text>Loading native settings...</Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <ScrollView style={styles.container}>
-      {/* Currency settings */}
+    <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ 
+        title: 'Settings',
+        headerStyle: {
+          backgroundColor: '#f5f5f5',
+        },
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        }
+      }} />
+      
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Currency Settings</Text>
-        <View style={styles.settingItem}>
-          <Text style={styles.settingText}>Currency</Text>
-          <View style={styles.currencySelector}>
+        
+        <View style={styles.settingRow}>
+          <Text style={styles.settingLabel}>Currency Unit</Text>
+          <View style={styles.settingValue}>
             <Text style={styles.currencyText}>
-              {currency === 'USD' ? 'US Dollar (USD)' : 'Hong Kong Dollar (HKD)'}
+              {isUSD ? 'USD ($)' : 'HKD (HK$)'}
             </Text>
-            <Switch
-              value={currency === 'HKD'}
-              onValueChange={handleToggleCurrency}
-              trackColor={{ false: '#767577', true: '#81b0ff' }}
-              thumbColor={currency === 'HKD' ? '#007AFF' : '#f4f3f4'}
-            />
           </View>
         </View>
+        
+        <View style={styles.settingRow}>
+          <Text style={styles.settingLabel}>Use USD</Text>
+          <Switch
+            value={isUSD}
+            onValueChange={handleCurrencyToggle}
+            trackColor={{ false: '#767577', true: '#81b0ff' }}
+            thumbColor={isUSD ? '#007AFF' : '#f4f3f4'}
+          />
+        </View>
+
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={handleCurrencyToggle}
+        >
+          <Text style={styles.buttonText}>
+            Switch to {isUSD ? 'HKD' : 'USD'}
+          </Text>
+        </TouchableOpacity>
       </View>
       
-      <StatusBar style="auto" />
-    </ScrollView>
+      <View style={styles.infoSection}>
+        <Text style={styles.infoText}>
+          Switching currency will change the display currency for all asset values in the app.
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#f5f5f5',
+    padding: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   section: {
-    marginTop: 20,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
     borderRadius: 10,
-    marginHorizontal: 16,
+    padding: 16,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
   sectionTitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: -10,
-    marginLeft: 16,
-    marginBottom: 5,
-    backgroundColor: '#f8f8f8',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 5,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
   },
-  settingItem: {
+  settingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  settingText: {
+  settingLabel: {
     fontSize: 16,
-    fontWeight: '500',
     color: '#333',
   },
-  currencySelector: {
+  settingValue: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   currencyText: {
-    marginRight: 8,
     fontSize: 16,
+    color: '#007AFF',
+    marginRight: 8,
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    padding: 14,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  infoSection: {
+    padding: 16,
+  },
+  infoText: {
     color: '#666',
+    fontSize: 14,
+    lineHeight: 20,
   },
 }); 

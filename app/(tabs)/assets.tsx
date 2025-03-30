@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { StyleSheet, FlatList, Pressable, View, Text, SafeAreaView, ActivityIndicator } from 'react-native';
+import { StyleSheet, FlatList, Pressable, View, Text, SafeAreaView, ActivityIndicator, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCurrency } from '../../hooks/useCurrencyContext';
+import { useWalletSettingsModule } from '../../hooks/useWalletSettingsModule';
 
 // Import JSON data
 import currencyData from '../../assets/data/Currency.json';
@@ -10,7 +12,7 @@ import usdRateData from '../../assets/data/Fiat_rate_usd.json';
 import hkdRateData from '../../assets/data/Fiat_rate_hkd.json';
 
 // Storage key for currency setting - must match the key used in settings.tsx
-const CURRENCY_STORAGE_KEY = 'app_currency_setting';
+const CURRENCY_STORAGE_KEY = 'currency';
 
 // Cryptocurrency icon color mapping
 const colorMap: Record<string, string> = {
@@ -22,20 +24,6 @@ const colorMap: Record<string, string> = {
   ATOM: '#2E3148',
   DOGE: '#C2A633'
 };
-
-// Generate random 24-hour change
-const getRandomChange = () => {
-  // Generate random number between -10% and 10%
-  return (Math.random() * 20 - 10).toFixed(2);
-};
-
-// Pre-generate change percentages for each coin
-const priceChanges: Record<number, string> = {};
-
-// Initialize change percentages for all coins
-currencyData.currencies?.forEach(currency => {
-  priceChanges[currency.id] = getRandomChange();
-});
 
 // Load cryptocurrency data from JSON files
 const loadCryptoData = () => {
@@ -56,7 +44,7 @@ const loadCryptoData = () => {
       ...currency,
       fiatRate,
       fiatValue,
-      priceChange: priceChanges[currency.id] || '0.00',
+      priceChange: '0.00',
       color: colorMap[currency.symbol] || '#888888'
     };
   });
@@ -74,7 +62,7 @@ const loadCryptoData = () => {
       ...currency,
       fiatRate,
       fiatValue,
-      priceChange: priceChanges[currency.id] || '0.00',
+      priceChange: '0.00',
       color: colorMap[currency.symbol] || '#888888'
     };
   });
@@ -86,53 +74,29 @@ export default function AssetsScreen() {
   // States
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Crypto');
-  const [currencyType, setCurrencyType] = useState('USD');
   const [cryptoData, setCryptoData] = useState<any[]>([]);
-
-  // Check for settings changes when component is focused
-  useEffect(() => {
-    const checkSettings = async () => {
-      try {
-        const savedCurrency = await AsyncStorage.getItem(CURRENCY_STORAGE_KEY);
-        if (savedCurrency && savedCurrency !== currencyType) {
-          console.log("Loading saved currency from storage:", savedCurrency);
-          setCurrencyType(savedCurrency);
-        }
-      } catch (error) {
-        console.error("Failed to load currency setting:", error);
-      }
-    };
-    
-    // Check currency settings when component mounts
-    checkSettings();
-    
-    // Set interval to periodically check for currency changes
-    const intervalId = setInterval(checkSettings, 2000);
-    
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [currencyType]);
+  
+  // 使用CurrencyContext
+  const { fiatCurrency, getCurrencyData } = useCurrency();
+  const walletModule = useWalletSettingsModule();
 
   // Load data
   useEffect(() => {
     // Simulate network request delay
     const timer = setTimeout(() => {
-      const { usdData, hkdData } = loadCryptoData();
-      setCryptoData(currencyType === 'USD' ? usdData : hkdData);
+      setCryptoData(getCurrencyData());
       setIsLoading(false);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [fiatCurrency, getCurrencyData]);
 
-  // Update data when currency type changes
+  // Update data when fiatCurrency changes
   useEffect(() => {
     if (!isLoading) {
-      const { usdData, hkdData } = loadCryptoData();
-      setCryptoData(currencyType === 'USD' ? usdData : hkdData);
+      setCryptoData(getCurrencyData());
     }
-  }, [currencyType, isLoading]);
+  }, [fiatCurrency, isLoading, getCurrencyData]);
 
   // Tab component
   const TabBar = () => {
@@ -191,9 +155,21 @@ export default function AssetsScreen() {
     </View>
   );
 
-  // Toggle currency type
-  const toggleCurrency = () => {
-    setCurrencyType(prev => prev === 'USD' ? 'HKD' : 'USD');
+  // Navigate to settings page
+  const navigateToSettings = async () => {
+    if (walletModule.isModuleAvailable && Platform.OS === 'ios') {
+      try {
+        // @ts-ignore - TS doesn't recognize the openSettingsPage method
+        await walletModule.openSettingsPage();
+      } catch (error) {
+        console.error('Failed to open native settings:', error);
+        // Fallback to React Navigation
+        router.navigate('/settings');
+      }
+    } else {
+      // Use React Navigation if native module is not available
+      router.navigate('/settings');
+    }
   };
 
   // Render asset item
@@ -202,7 +178,7 @@ export default function AssetsScreen() {
     const isNegative = parseFloat(change) < 0;
     
     // Show correct currency symbol based on currency type
-    const currencySymbol = currencyType === 'USD' ? '$' : 'HK$';
+    const currencySymbol = fiatCurrency === 'USD' ? '$' : 'HK$';
     
     // Format value display
     const formatValue = (value: string) => {
@@ -255,7 +231,7 @@ export default function AssetsScreen() {
         <Pressable style={styles.iconButton}>
           <MaterialIcons name="history" size={24} color="#999999" />
         </Pressable>
-        <Pressable style={styles.iconButton} onPress={() => router.navigate('/settings')}>
+        <Pressable style={styles.iconButton} onPress={navigateToSettings}>
           <MaterialIcons name="settings" size={24} color="#999999" />
         </Pressable>
       </View>

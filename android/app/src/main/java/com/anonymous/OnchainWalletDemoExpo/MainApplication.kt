@@ -16,6 +16,9 @@ import com.facebook.soloader.SoLoader
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
 
+// 引入我们的自定义模块包
+import com.anonymous.OnchainWalletDemoExpo.settings.SettingsModulePackage
+
 class MainApplication : Application(), ReactApplication {
 
   override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
@@ -25,6 +28,10 @@ class MainApplication : Application(), ReactApplication {
             val packages = PackageList(this).packages
             // Packages that cannot be autolinked yet can be added manually here, for example:
             // packages.add(new MyReactNativePackage());
+            
+            // 添加我们的自定义模块包
+            packages.add(SettingsModulePackage())
+            
             return packages
           }
 
