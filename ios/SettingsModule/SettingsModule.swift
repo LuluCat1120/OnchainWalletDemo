@@ -1,62 +1,82 @@
 import Foundation
-import ExpoModulesCore
 import UIKit
+import React
 
-public class SettingsModuleModule: Module {
-  // 定义一个私有变量来存储当前货币
+@objc(SettingsModule)
+public class SettingsModule: RCTEventEmitter {
+  // Define a private variable to store the current currency
   private var currentCurrency = "USD"
+  private var hasListeners = false
   
-  // 模块定义
-  public func definition() -> ModuleDefinition {
-    // 定义模块名称
-    Name("SettingsModule")
+  // Override supported events
+  @objc override public func supportedEvents() -> [String] {
+    return ["onCurrencyChange"]
+  }
+  
+  // Start observer
+  @objc override public func startObserving() {
+    hasListeners = true
+  }
+  
+  // Stop observer
+  @objc override public func stopObserving() {
+    hasListeners = false
+  }
+  
+  // Initialization method
+  @objc override public init() {
+    super.init()
+  }
+  
+  @objc public override static func requiresMainQueueSetup() -> Bool {
+    return true
+  }
+  
+  // Get current currency
+  @objc public func getCurrency(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+    resolve(self.currentCurrency)
+  }
+  
+  // Set currency
+  @objc public func setCurrency(_ currency: String, resolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+    self.currentCurrency = currency
     
-    // 导出常量
-    Constants([
-      "defaultCurrency": "USD"
-    ])
-    
-    // 注册事件
-    Events("onCurrencyChange")
-    
-    // 获取当前货币
-    AsyncFunction("getCurrency") { () -> String in
-      return self.currentCurrency
+    // Send event, only when there are listeners
+    if hasListeners {
+      self.sendEvent(withName: "onCurrencyChange", body: ["currency": currency])
     }
     
-    // 设置货币
-    AsyncFunction("setCurrency") { (currency: String, promise: Promise) in
-      self.currentCurrency = currency
-      // 发送事件，使用字典而不是数组
-      self.sendEvent("onCurrencyChange", ["currency": currency])
-      promise.resolve(currency)
+    resolve(currency)
+  }
+  
+  // Toggle currency
+  @objc public func toggleCurrency(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+    if self.currentCurrency == "USD" {
+      self.currentCurrency = "HKD"
+    } else {
+      self.currentCurrency = "USD"
     }
     
-    // 切换货币
-    AsyncFunction("toggleCurrency") { (promise: Promise) in
-      if self.currentCurrency == "USD" {
-        self.currentCurrency = "HKD"
+    // Send event, only when there are listeners
+    if hasListeners {
+      self.sendEvent(withName: "onCurrencyChange", body: ["currency": self.currentCurrency])
+    }
+    
+    resolve(self.currentCurrency)
+  }
+  
+  // Open native settings page
+  @objc public func openSettingsPage(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    DispatchQueue.main.async {
+      if let rootViewController = UIApplication.shared.delegate?.window??.rootViewController {
+        let settingsVC = SettingsViewController()
+        settingsVC.settingsModule = self
+        
+        let navController = UINavigationController(rootViewController: settingsVC)
+        rootViewController.present(navController, animated: true, completion: nil)
+        resolve(true)
       } else {
-        self.currentCurrency = "USD"
-      }
-      // 发送事件，使用字典而不是数组
-      self.sendEvent("onCurrencyChange", ["currency": self.currentCurrency])
-      promise.resolve(self.currentCurrency)
-    }
-    
-    // Open native settings page
-    AsyncFunction("openSettingsPage") { (promise: Promise) in
-      DispatchQueue.main.async {
-        if let rootViewController = UIApplication.shared.delegate?.window??.rootViewController {
-          let settingsVC = SettingsViewController()
-          settingsVC.settingsModule = self
-          
-          let navController = UINavigationController(rootViewController: settingsVC)
-          rootViewController.present(navController, animated: true, completion: nil)
-          promise.resolve(true)
-        } else {
-          promise.reject("NO_VIEW_CONTROLLER", "Could not find view controller to present settings")
-        }
+        reject("NO_VIEW_CONTROLLER", "Could not find view controller to present settings", nil)
       }
     }
   }
@@ -64,7 +84,11 @@ public class SettingsModuleModule: Module {
   // Method to update currency from the native UI
   public func updateCurrency(_ newCurrency: String) {
     currentCurrency = newCurrency
-    sendEvent("onCurrencyChange", ["currency": newCurrency])
+    
+    // Send event, only when there are listeners
+    if hasListeners {
+      self.sendEvent(withName: "onCurrencyChange", body: ["currency": newCurrency])
+    }
   }
   
   // Method to get current currency for the view controller
@@ -75,7 +99,7 @@ public class SettingsModuleModule: Module {
 
 // Native Settings View Controller
 class SettingsViewController: UIViewController {
-  weak var settingsModule: SettingsModuleModule?
+  weak var settingsModule: SettingsModule?
   private var currentCurrency: String = "USD"
   
   override func viewDidLoad() {

@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react-hooks';
 import { useCurrency, CurrencyProvider } from '../hooks/useCurrencyContext';
 import React from 'react';
 
-// 模拟JSON数据
+// Mock JSON data
 jest.mock('../assets/data/Currency.json', () => ({
   currencies: [
     {
@@ -54,7 +54,7 @@ jest.mock('../assets/data/Fiat_rate_hkd.json', () => ({
   ]
 }));
 
-// 模拟原生模块
+// Mock native module
 jest.mock('../hooks/useWalletSettingsModule', () => ({
   useWalletSettingsModule: () => ({
     isModuleAvailable: false,
@@ -83,17 +83,17 @@ describe('useCurrency', () => {
     
     const { result } = renderHook(() => useCurrency(), { wrapper });
     
-    // 初始为USD
+    // Initially USD
     expect(result.current.fiatCurrency).toBe('USD');
     
-    // 切换到HKD
+    // Switch to HKD
     act(() => {
       result.current.toggleCurrency();
     });
     
     expect(result.current.fiatCurrency).toBe('HKD');
     
-    // 再次切换回USD
+    // Switch back to USD
     act(() => {
       result.current.toggleCurrency();
     });
@@ -125,7 +125,7 @@ describe('useCurrency', () => {
     
     const { result } = renderHook(() => useCurrency(), { wrapper });
     
-    // 切换到HKD
+    // Switch to HKD
     act(() => {
       result.current.toggleCurrency();
     });

@@ -27,51 +27,51 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
     addCurrencyChangeListener 
   } = useWalletSettingsModule();
 
-  // 初始化货币设置
+  // Initialize currency settings
   useEffect(() => {
     const initCurrency = async () => {
       try {
-        // 首先尝试从AsyncStorage获取
+        // First try to get from AsyncStorage
         const storedCurrency = await AsyncStorage.getItem(CURRENCY_STORAGE_KEY);
         
         if (isModuleAvailable) {
-          // 如果原生模块可用，从原生模块获取
+          // If native module is available, get from native module
           const nativeCurrency = await getCurrentCurrency() as CurrencyType;
           
           if (storedCurrency) {
-            // 如果储存的值与原生模块不一致，更新原生模块
+            // If stored value is inconsistent with native module, update native module
             if (storedCurrency !== nativeCurrency) {
               await setNativeCurrency(storedCurrency as CurrencyType);
             }
             setFiatCurrency(storedCurrency as CurrencyType);
           } else if (nativeCurrency) {
-            // 如果没有储存的值但有原生值，使用原生值并储存
+            // If no stored value but native value exists, use native value and store it
             setFiatCurrency(nativeCurrency);
             await AsyncStorage.setItem(CURRENCY_STORAGE_KEY, nativeCurrency);
           }
         } else if (storedCurrency) {
-          // 如果原生模块不可用但有储存的值，直接使用
+          // If native module is not available but stored value exists, use directly
           setFiatCurrency(storedCurrency as CurrencyType);
         }
       } catch (error) {
-        console.error('初始化货币设置失败:', error);
+        console.error('Failed to initialize currency settings:', error);
       }
     };
 
     initCurrency();
   }, [isModuleAvailable, getCurrentCurrency, setNativeCurrency]);
 
-  // 监听货币变更事件
+  // Listen for currency change events
   useEffect(() => {
     if (!isModuleAvailable) return;
 
-    console.log('设置货币变更监听器');
+    console.log('Setting up currency change listener');
     const subscription = addCurrencyChangeListener((currency) => {
-      console.log('货币已变更为:', currency);
+      console.log('Currency changed to:', currency);
       setFiatCurrency(currency as CurrencyType);
-      // 同步到AsyncStorage
+      // Sync to AsyncStorage
       AsyncStorage.setItem(CURRENCY_STORAGE_KEY, currency).catch(
-        err => console.error('保存货币设置失败:', err)
+        err => console.error('Failed to save currency setting:', err)
       );
     });
 
@@ -80,37 +80,37 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
   }, [isModuleAvailable, addCurrencyChangeListener]);
 
-  // 切换货币
+  // Toggle currency
   const toggleCurrency = async () => {
     try {
       const newCurrency = fiatCurrency === 'USD' ? 'HKD' : 'USD';
       
-      // 更新状态
+      // Update state
       setFiatCurrency(newCurrency);
       
-      // 保存到AsyncStorage
+      // Save to AsyncStorage
       await AsyncStorage.setItem(CURRENCY_STORAGE_KEY, newCurrency);
       
-      // 如果原生模块可用，同步到原生模块
+      // If native module is available, sync to native module
       if (isModuleAvailable) {
         await setNativeCurrency(newCurrency);
       }
     } catch (error) {
-      console.error('切换货币失败:', error);
+      console.error('Failed to toggle currency:', error);
     }
   };
 
-  // 获取货币数据的方法
+  // Method to get currency data
   const getCurrencyData = useCallback(() => {
     const currencyData = currencies.currencies;
     const ratesData = fiatCurrency === 'USD' ? usdRates.rates : hkdRates.rates;
 
-    // 生成随机价格变化百分比
+    // Generate random price change percentage
     const getRandomChange = () => {
       return (Math.random() * 20 - 10).toFixed(2);
     };
 
-    // 预生成每个币种的价格变化
+    // Pre-generate price changes for each currency
     const priceChanges: Record<number, string> = {};
     currencyData.forEach(currency => {
       priceChanges[currency.id] = getRandomChange();
@@ -129,7 +129,7 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
   }, [fiatCurrency]);
 
-  // 获取币种的颜色
+  // Get color for currency symbol
   const getColorForSymbol = (symbol: string): string => {
     const colorMap: Record<string, string> = {
       BTC: '#F7931A',

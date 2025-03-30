@@ -1647,7 +1647,7 @@ PODS:
     - React-logger (= 0.76.7)
     - React-perflogger (= 0.76.7)
     - React-utils (= 0.76.7)
-  - RNCAsyncStorage (2.1.2):
+  - RNCAsyncStorage (1.23.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1821,6 +1821,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - SettingsModule (1.0.0):
+    - ExpoModulesCore
   - SocketRocket (0.7.1)
   - Yoga (0.0.0)
 
@@ -1910,6 +1912,7 @@ DEPENDENCIES:
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - SettingsModule (from `../ios/SettingsModule`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -2084,6 +2087,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  SettingsModule:
+    :path: "../ios/SettingsModule"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2167,13 +2172,14 @@ SPEC CHECKSUMS:
   React-utils: 0342746d2cf989cf5e0d1b84c98cfa152edbdf3f
   ReactCodegen: e1c019dc68733dd2c5d3b263b4a6dc72002c0045
   ReactCommon: 81e0744ee33adfd6d586141b927024f488bc49ea
-  RNCAsyncStorage: 01d008a47892226320734b59f495f3847c3ce0c9
+  RNCAsyncStorage: ff8f69859448bde50f1c25d3e7eb37555fed33ab
   RNGestureHandler: 16ef3dc2d7ecb09f240f25df5255953c4098819b
   RNReanimated: a2692304a6568bc656c04c8ffea812887d37436e
   RNScreens: 351f431ef2a042a1887d4d90e1c1024b8ae9d123
+  SettingsModule: 3cf203442a754c7b7f1fdbb3faba8badd666caac
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 90d80701b27946c4b23461c00a7207f300a6ff71
 
-PODFILE CHECKSUM: 654e11c7f3a6c7f3f809918a06bf61f6c6bc2d55
+PODFILE CHECKSUM: a1fd802ad9208a36b2b4f5e6093081b3b55aa61d
 
 COCOAPODS: 1.16.2

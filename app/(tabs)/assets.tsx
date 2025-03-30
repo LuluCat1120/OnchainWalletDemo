@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCurrency } from '../../hooks/useCurrencyContext';
 import { useWalletSettingsModule } from '../../hooks/useWalletSettingsModule';
+import { formatLargeNumber } from '../../utils/CurrencyParser';
 
 // Import JSON data
 import currencyData from '../../assets/data/Currency.json';
@@ -180,17 +181,6 @@ export default function AssetsScreen() {
     // Show correct currency symbol based on currency type
     const currencySymbol = fiatCurrency === 'USD' ? '$' : 'HK$';
     
-    // Format value display
-    const formatValue = (value: string) => {
-      const numValue = parseFloat(value);
-      if (numValue >= 1000000) {
-        return `${(numValue / 1000000).toFixed(2)}M`;
-      } else if (numValue >= 1000) {
-        return `${(numValue / 1000).toFixed(2)}K`;
-      }
-      return numValue.toFixed(2);
-    };
-    
     return (
       <View style={styles.assetItemContainer}>
         <View style={styles.assetItem}>
@@ -206,7 +196,7 @@ export default function AssetsScreen() {
             </View>
           </View>
           <View style={styles.assetRight}>
-            <Text style={styles.assetValue}>{currencySymbol} {formatValue(item.fiatValue)}</Text>
+            <Text style={styles.assetValue}>{currencySymbol} {formatLargeNumber(item.fiatValue)}</Text>
             <Text style={styles.assetAmount}>{item.amount} {item.symbol}</Text>
           </View>
         </View>
@@ -247,12 +237,36 @@ export default function AssetsScreen() {
   );
 
   // Balance display component
-  const BalanceDisplay = () => (
-    <View style={styles.balanceDisplay}>
-      <MaterialIcons name="visibility" size={24} color="#999999" />
-      <Text style={styles.balanceDash}>- - • - -</Text>
-    </View>
-  );
+  const BalanceDisplay = () => {
+    const [showBalance, setShowBalance] = useState(false);
+    
+    // Calculate total balance
+    const totalBalance = useMemo(() => {
+      if (!cryptoData.length) return '0';
+      
+      const total = cryptoData.reduce((sum, asset) => {
+        return sum + parseFloat(asset.fiatValue);
+      }, 0);
+      
+      return total.toString();
+    }, [cryptoData]);
+    
+    // Get currency symbol
+    const currencySymbol = fiatCurrency === 'USD' ? '$' : 'HK$';
+    
+    return (
+      <View style={styles.balanceDisplay}>
+        <Pressable onPress={() => setShowBalance(!showBalance)}>
+          <MaterialIcons name={showBalance ? "visibility" : "visibility-off"} size={24} color="#999999" />
+        </Pressable>
+        {showBalance ? (
+          <Text style={styles.balanceText}>{currencySymbol} {formatLargeNumber(totalBalance)}</Text>
+        ) : (
+          <Text style={styles.balanceDash}>- - • - -</Text>
+        )}
+      </View>
+    );
+  };
 
   // Loading state
   if (isLoading) {
@@ -533,5 +547,11 @@ const styles = StyleSheet.create({
   },
   currencyText: {
     fontWeight: '600',
+  },
+  balanceText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginLeft: 8,
+    color: '#000000',
   },
 }); 
