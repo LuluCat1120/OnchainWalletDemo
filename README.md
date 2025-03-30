@@ -1,50 +1,87 @@
-# Welcome to your Expo app 👋
+# OnchainWalletDemoExpo - 区块链钱包演示
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+这是一个使用 Expo 和 React Native 开发的区块链钱包演示应用，支持显示加密货币资产、切换货币单位等功能。
 
-## Get started
+## 功能特色
 
-1. Install dependencies
+- 🔒 支持多种加密货币资产展示（BTC、ETH、DOGE等）
+- 💱 支持货币单位切换（USD / HKD）
+- 📊 资产价值自动格式化显示（K/M/B）
+- 🔗 集成原生设置模块
+- 📱 优化的移动端UI设计
+
+## 快速开始
+
+### 环境要求
+
+- Node.js 18+
+- Xcode 14+ (iOS开发)
+- Android Studio (Android开发)
+- npm 或 yarn
+
+### 安装步骤
+
+1. 克隆项目到本地
+
+   ```bash
+   git clone https://github.com/your-username/OnchainWalletDemoExpo.git
+   cd OnchainWalletDemoExpo
+   ```
+
+2. 安装依赖包
 
    ```bash
    npm install
    ```
 
-2. Start the app
+3. 启动应用
 
    ```bash
-    npx expo start
+   # 普通启动
+   npm run ios
+   
+   # 如果遇到网络问题，请使用以下命令清理缓存并重启
+   sh cleanAndStart.sh
    ```
 
-In the output, you'll find options to open the app in a
+## 常见问题解决
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+如果遇到"fetch failed"或加载问题，请尝试：
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. 清理缓存
+   ```bash
+   # 清理缓存
+   rm -rf node_modules/.cache
+   watchman watch-del-all
+   ```
 
-## Get a fresh project
+2. 使用提供的脚本一键清理和启动
+   ```bash
+   sh cleanAndStart.sh
+   ```
 
-When you're ready, run:
+## 项目结构
 
-```bash
-npm run reset-project
+```
+app/             # 主应用代码
+├── (tabs)       # 底部标签页
+│   ├── assets.tsx    # 资产页面
+│   └── ...
+├── settings.tsx  # 设置页面
+hooks/           # React钩子
+├── useCurrencyContext.tsx  # 货币上下文
+├── useWalletSettingsModule.tsx  # 钱包设置模块
+ios/             # iOS原生代码
+├── SettingsModule  # 原生设置模块
+utils/           # 工具函数
+├── CurrencyParser.ts  # 货币格式化工具
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 学习资源
 
-## Learn more
+- [Expo 文档](https://docs.expo.dev/)
+- [React Native 文档](https://reactnative.dev/docs/getting-started)
 
-To learn more about developing your project with Expo, look at the following resources:
+## 贡献指南
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+欢迎提交 Pull Request 或提出 Issue 来帮助改进这个项目！
